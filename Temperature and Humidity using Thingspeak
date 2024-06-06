@@ -1,1 +1,116 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include "DHT.h"
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
+#define DHTPIN 5
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+const char* ssid = "Mahesh";
+const char* password = "Aryan@14";
+
+// Domain Name with full URL Path for HTTP POST Request
+const char* serverName = "http://api.thingspeak.com/update";
+
+// write API Key provided by thingspeak
+String apiKey = "AZ2VFCSOW7DF4EFO";
+
+ 
+
+void setup() {
+
+  Serial.begin(115200);
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  WiFi.begin(ssid, password);
+  dht.begin();
+  Serial.println("Connecting");
+
+  while(WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+
+}
+
+void loop() {
+
+  if(WiFi.status()== WL_CONNECTED){
+
+      WiFiClient client;
+      HTTPClient http;
+
+      delay(10000); // wait for 10 seconds
+
+      float h = dht.readHumidity();
+      float t = dht.readTemperature();
+
+      // Your Domain name with URL path or IP address with path
+      http.begin(client, serverName);
+      // Specify content-type header
+      //http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+      // Data to send with HTTP POST
+      String httpRequestData = "api_key=" + apiKey + "&field1=" + "&field2=" + String(t) + String(h);  
+
+      int httpResponseCode = http.POST(httpRequestData);  // Send HTTP POST request
+
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      Serial.print("Send data to channel-1 ");
+      Serial.print("Field-1: ");
+      Serial.print(t); 
+      Serial.print("Field-2: ");
+      Serial.print(h); 
+      Serial.println(" data send"); 
+
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(0,0);
+      display.println("Temperature: ");
+      display.setTextSize(2);
+      display.setCursor(0,10);
+      display.println(t);
+      display.setTextSize(1);
+      display.setCursor(70,10);
+      display.cp437(true); //To print  º symbol, we use the Code Page 437 font. For that, you need to set the cp437 to true 
+      display.write(167); //use the write() method to display your chosen character. The º symbol corresponds to character 167.
+      display.setTextSize(2);
+      display.print("C");
+
+    // display humidity
+      display.setTextSize(1);
+      display.setCursor(0, 35);
+      display.print("Humidity: ");
+      display.setTextSize(2);
+      display.setCursor(0, 45);
+      display.print(h);
+      display.print(" %"); 
+      display.display();
+      
+      http.end();
+
+    }
+
+    else {
+
+      Serial.println("WiFi Disconnected");
+
+    }
+
+}
