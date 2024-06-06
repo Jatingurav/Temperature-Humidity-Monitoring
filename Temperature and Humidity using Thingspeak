@@ -5,16 +5,16 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define DHTPIN 5
-#define DHTTYPE DHT11
+#define DHTPIN 5  //Digital GPIO Pin
+#define DHTTYPE DHT11  //DHT11 Type sensor
 
-DHT dht(DHTPIN, DHTTYPE);
+DHT dht(DHTPIN, DHTTYPE);  //dht is a object of class DHT
 
+//OLED Display Settings
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 #define SCREEN_ADDRESS 0x3C
-
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const char* ssid = "Mahesh";
@@ -24,7 +24,7 @@ const char* password = "Aryan@14";
 const char* serverName = "http://api.thingspeak.com/update";
 
 // write API Key provided by thingspeak
-String apiKey = "AZ2VFCSOW7DF4EFO";
+String apiKey = "AU78YZI83NVDDE7K";
 
  
 
@@ -56,19 +56,19 @@ void loop() {
 
       delay(10000); // wait for 10 seconds
 
+      //DHT Parameters
       float h = dht.readHumidity();
       float t = dht.readTemperature();
 
       // Your Domain name with URL path or IP address with path
       http.begin(client, serverName);
-      // Specify content-type header
-      //http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
       // Data to send with HTTP POST
       String httpRequestData = "api_key=" + apiKey + "&field1=" + "&field2=" + String(t) + String(h);  
 
       int httpResponseCode = http.POST(httpRequestData);  // Send HTTP POST request
 
+      //Print on Serial Monitor
       Serial.print("HTTP Response code: ");
       Serial.println(httpResponseCode);
       Serial.print("Send data to channel-1 ");
@@ -78,6 +78,7 @@ void loop() {
       Serial.print(h); 
       Serial.println(" data send"); 
 
+      //Print on OLED Display
       display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(WHITE);
